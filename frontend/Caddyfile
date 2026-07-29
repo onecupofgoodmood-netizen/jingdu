@@ -1,12 +1,12 @@
 {
-	default_sni {$SITE_ADDRESS}
+	default_sni {$FALLBACK_ADDRESS}
 }
 
 www.{$SITE_ADDRESS} {
 	redir https://{$SITE_ADDRESS}{uri} permanent
 }
 
-{$SITE_ADDRESS} {
+{$SITE_ADDRESS}, {$FALLBACK_ADDRESS} {
 	tls {
 		issuer acme {
 			dir https://acme-v02.api.letsencrypt.org/directory

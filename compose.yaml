@@ -24,6 +24,7 @@ services:
       context: ./frontend
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS}
+      FALLBACK_ADDRESS: ${FALLBACK_ADDRESS}
     restart: unless-stopped
     depends_on:
       backend:

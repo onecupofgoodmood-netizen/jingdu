@@ -107,6 +107,23 @@ class DownloadRequest(BaseModel):
     format_id: str = "bestvideo+bestaudio/best"
 
 
+def _public_error_message(error: Exception) -> str:
+    message = str(error)
+    network_markers = (
+        "network is unreachable",
+        "failed to establish a new connection",
+        "connection timed out",
+        "connect timeout",
+    )
+    if any(marker in message.lower() for marker in network_markers):
+        return (
+            "服务器无法访问目标平台。中国大陆服务器访问 YouTube、"
+            "X/Twitter、Instagram 等境外平台时，请将后端迁移到"
+            "香港或海外区域，或配置可用的出站代理。"
+        )
+    return message
+
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "message": "镜读服务运行中"}
@@ -138,7 +155,7 @@ async def parse_video(req: ParseRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail={
             "success": False,
-            "error": f"解析失败: {str(e)}"
+            "error": f"解析失败: {_public_error_message(e)}"
         })
 
 
@@ -183,7 +200,7 @@ async def download_video(req: DownloadRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail={
             "success": False,
-            "error": f"下载失败: {str(e)}"
+            "error": f"下载失败: {_public_error_message(e)}"
         })
 
 
@@ -299,7 +316,7 @@ async def get_direct_url(req: DownloadRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail={
             "success": False,
-            "error": f"获取直链失败: {str(e)}"
+            "error": f"获取直链失败: {_public_error_message(e)}"
         })
 
 

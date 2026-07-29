@@ -46,6 +46,34 @@ def is_bilibili_url(url: str) -> bool:
     return host == "b23.tv" or host.endswith("bilibili.com")
 
 
+MAINLAND_RESTRICTED_HOSTS = (
+    "youtube.com",
+    "youtu.be",
+    "x.com",
+    "twitter.com",
+    "instagram.com",
+    "facebook.com",
+    "tiktok.com",
+)
+
+
+def _ensure_platform_reachable(url: str) -> None:
+    region = os.getenv("DEPLOY_REGION", "").strip().lower()
+    if region not in {"cn", "china", "cn-mainland"}:
+        return
+
+    try:
+        host = (urlparse(url).hostname or "").lower()
+    except Exception:
+        return
+
+    if any(host == domain or host.endswith(f".{domain}") for domain in MAINLAND_RESTRICTED_HOSTS):
+        raise ValueError(
+            "当前服务部署在中国大陆，无法直接访问该境外平台。"
+            "请使用香港或海外服务器部署后端。"
+        )
+
+
 def _is_bilibili_api_format(format_id: str) -> bool:
     return format_id.startswith("bilibili_api:")
 
@@ -229,6 +257,7 @@ class VideoDownloader:
 
     def parse_video(self, url: str) -> dict:
         """解析视频信息，不下载文件"""
+        _ensure_platform_reachable(url)
         ydl_opts = {
             "quiet": True,
             "no_warnings": True,
@@ -381,6 +410,7 @@ class VideoDownloader:
 
     def download_video(self, url: str, format_id: str) -> dict:
         """下载视频到服务器临时目录，返回文件路径和元数据"""
+        _ensure_platform_reachable(url)
         if is_bilibili_url(url) and _is_bilibili_api_format(format_id):
             return self._download_bilibili_api(url, format_id)
 
@@ -506,6 +536,7 @@ class VideoDownloader:
 
     def get_direct_url(self, url: str, format_id: str) -> dict:
         """获取视频直链"""
+        _ensure_platform_reachable(url)
         if is_bilibili_url(url) and _is_bilibili_api_format(format_id):
             direct = self._resolve_bilibili_api_direct_url(url, format_id)
             return {
