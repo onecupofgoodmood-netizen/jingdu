@@ -2,6 +2,10 @@
 	default_sni {$SITE_ADDRESS}
 }
 
+www.{$SITE_ADDRESS} {
+	redir https://{$SITE_ADDRESS}{uri} permanent
+}
+
 {$SITE_ADDRESS} {
 	tls {
 		issuer acme {
